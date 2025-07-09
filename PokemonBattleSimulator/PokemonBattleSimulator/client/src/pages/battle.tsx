@@ -29,6 +29,23 @@ export default function Battle() {
     setLocation("/battle/1");
   }, [pikachuPokemon, charizardPokemon, setLocation]);
 
+  // Pokémon moves mapping
+  const pokemonMoves: { [key: string]: { normal: string; mega: string } } = {
+    'Pikachu': { normal: 'Thunderbolt', mega: 'Thunderbolt' },
+    'Charizard': { normal: 'Flamethrower', mega: 'Mega Flamethrower' },
+    'Blastoise': { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' },
+    'Venusaur': { normal: 'Solar Beam', mega: 'Mega Solar Beam' },
+    'Gyarados': { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' }
+  };
+
+  const getPokemonMove = (pokemonName: string, isMega: boolean) => {
+    const moves = pokemonMoves[pokemonName];
+    if (!moves) {
+      return isMega ? 'Mega Attack' : 'Tackle'; // Default moves for unknown Pokémon
+    }
+    return isMega ? moves.mega : moves.normal;
+  };
+
   const handleAttack = () => {
     let baseDamage = Math.floor(Math.random() * 20) + 10; // Random damage between 10-30
     
@@ -42,7 +59,7 @@ export default function Battle() {
     if (currentTurn === 'pikachu') {
       const newHP = Math.max(0, charizardHP - baseDamage);
       setCharizardHP(newHP);
-      const attackName = pikachuMega ? 'Mega Thunderbolt' : 'Thunderbolt';
+      const attackName = getPokemonMove(pikachuPokemon, pikachuMega);
       setBattleLog(prev => [...prev, `${pikachuPokemon} uses ${attackName} for ${baseDamage} damage!`]);
       setCurrentTurn('charizard');
       
@@ -52,7 +69,7 @@ export default function Battle() {
     } else {
       const newHP = Math.max(0, pikachuHP - baseDamage);
       setPikachuHP(newHP);
-      const attackName = charizardMega ? 'Mega Flamethrower' : 'Flamethrower';
+      const attackName = getPokemonMove(charizardPokemon, charizardMega);
       setBattleLog(prev => [...prev, `${charizardPokemon} uses ${attackName} for ${baseDamage} damage!`]);
       setCurrentTurn('pikachu');
       
