@@ -69,6 +69,44 @@ export default function Battle() {
     }
   };
 
+  // Move types - each move has its own type
+  const moveTypes: { [key: string]: string } = {
+    // Pikachu moves
+    'Thunderbolt': 'Electric',
+    'Quick Attack': 'Normal',
+    'Thunder Wave': 'Electric',
+    'Iron Tail': 'Steel',
+    
+    // Charizard moves
+    'Flamethrower': 'Fire',
+    'Mega Flamethrower': 'Fire',
+    'Air Slash': 'Flying',
+    'Dragon Claw': 'Dragon',
+    'Earthquake': 'Ground',
+    
+    // Blastoise moves
+    'Hydro Pump': 'Water',
+    'Mega Hydro Pump': 'Water',
+    'Ice Beam': 'Ice',
+    'Skull Bash': 'Normal',
+    'Flash Cannon': 'Steel',
+    
+    // Venusaur moves
+    'Solar Beam': 'Grass',
+    'Mega Solar Beam': 'Grass',
+    'Sludge Bomb': 'Poison',
+    'Sleep Powder': 'Grass',
+    
+    // Gyarados moves
+    'Dragon Rage': 'Dragon',
+    'Hyper Beam': 'Normal',
+    'Thunder': 'Electric'
+  };
+
+  const getMoveType = (moveName: string): string => {
+    return moveTypes[moveName] || 'Normal';
+  };
+
   // Type effectiveness chart - based on official Bulbapedia type chart
   const typeEffectiveness: { [key: string]: { [key: string]: number } } = {
     'Normal': { 
@@ -167,14 +205,14 @@ export default function Battle() {
     }
     
     if (currentTurn === 'pikachu') {
-      const attackType = getPokemonType(pikachuPokemon);
+      const attackName = moveName || getPokemonMove(pikachuPokemon, pikachuMega);
+      const attackType = getMoveType(attackName);
       const defenderType = getPokemonType(charizardPokemon);
       const effectiveness = getTypeEffectiveness(attackType, defenderType);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
       const newHP = Math.max(0, charizardHP - finalDamage);
       setCharizardHP(newHP);
-      const attackName = moveName || getPokemonMove(pikachuPokemon, pikachuMega);
       
       let effectivenessMessage = '';
       if (effectiveness === 0.0) {
@@ -194,14 +232,14 @@ export default function Battle() {
         setBattleLog(prev => [...prev, `${charizardPokemon} fainted! ${pikachuPokemon} wins!`]);
       }
     } else {
-      const attackType = getPokemonType(charizardPokemon);
+      const attackName = moveName || getPokemonMove(charizardPokemon, charizardMega);
+      const attackType = getMoveType(attackName);
       const defenderType = getPokemonType(pikachuPokemon);
       const effectiveness = getTypeEffectiveness(attackType, defenderType);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
       const newHP = Math.max(0, pikachuHP - finalDamage);
       setPikachuHP(newHP);
-      const attackName = moveName || getPokemonMove(charizardPokemon, charizardMega);
       
       let effectivenessMessage = '';
       if (effectiveness === 0.0) {
@@ -473,4 +511,4 @@ export default function Battle() {
       </div>
     </div>
   );
-}  
+} 
