@@ -1,6 +1,8 @@
 import { useRoute } from "wouter";
 import { Link } from "wouter";
 import { useState } from "react";
+import { useCallback } from "react";
+import { useLocation } from "wouter";
 
 export default function Battle() {
   const [, params] = useRoute("/battle/:id");
@@ -12,12 +14,20 @@ export default function Battle() {
   const [currentTurn, setCurrentTurn] = useState<'pikachu' | 'charizard'>('pikachu');
   const [pikachuMega, setPikachuMega] = useState(false);
   const [charizardMega, setCharizardMega] = useState(false);
-  const [pikachuPokemon, setPikachuPokemon] = useState('Pikachu');
-  const [charizardPokemon, setCharizardPokemon] = useState('Charizard');
+  const [pikachuPokemon, setPikachuPokemon] = useState(localStorage.getItem("trainer1Pokemon") || 'Pikachu');
+  const [charizardPokemon, setCharizardPokemon] = useState(localStorage.getItem("trainer2Pokemon") || 'Charizard');
   const [showSwapMenu, setShowSwapMenu] = useState(false);
   const [pikachuPotions, setPikachuPotions] = useState(3);
   const [charizardPotions, setCharizardPotions] = useState(3);
   const [showPotionMenu, setShowPotionMenu] = useState(false);
+
+  const [, setLocation] = useLocation();
+
+  const handleStartBattle = useCallback(() => {
+    localStorage.setItem("trainer1Pokemon", pikachuPokemon);
+    localStorage.setItem("trainer2Pokemon", charizardPokemon);
+    setLocation("/battle/1");
+  }, [pikachuPokemon, charizardPokemon, setLocation]);
 
   const handleAttack = () => {
     let baseDamage = Math.floor(Math.random() * 20) + 10; // Random damage between 10-30
