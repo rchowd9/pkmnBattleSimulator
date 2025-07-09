@@ -62,12 +62,15 @@ export default function Battle() {
     }
   };
 
+  // List of Pokémon that can Mega Evolve
+  const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gyarados'];
+
   const handleMegaEvolve = () => {
-    if (currentTurn === 'pikachu' && !pikachuMega) {
+    if (currentTurn === 'pikachu' && !pikachuMega && megaEvolvablePokemon.includes(pikachuPokemon)) {
       setPikachuMega(true);
       setBattleLog(prev => [...prev, `${pikachuPokemon} Mega Evolves!`]);
       setCurrentTurn('charizard');
-    } else if (currentTurn === 'charizard' && !charizardMega) {
+    } else if (currentTurn === 'charizard' && !charizardMega && megaEvolvablePokemon.includes(charizardPokemon)) {
       setCharizardMega(true);
       setBattleLog(prev => [...prev, `${charizardPokemon} Mega Evolves!`]);
       setCurrentTurn('pikachu');
@@ -173,7 +176,7 @@ export default function Battle() {
         <div className="text-center space-y-4">
           <div className="mb-4">
             <p className="text-lg font-semibold text-gray-700">
-              Current Turn: {currentTurn === 'pikachu' ? 'Pikachu' : 'Charizard'}
+              Current Turn: {currentTurn === 'pikachu' ? pikachuPokemon : charizardPokemon}
             </p>
           </div>
           
@@ -196,7 +199,10 @@ export default function Battle() {
               
               <button 
                 onClick={handleMegaEvolve}
-                disabled={(currentTurn === 'pikachu' && pikachuMega) || (currentTurn === 'charizard' && charizardMega)}
+                disabled={
+                  (currentTurn === 'pikachu' && (pikachuMega || !megaEvolvablePokemon.includes(pikachuPokemon))) || 
+                  (currentTurn === 'charizard' && (charizardMega || !megaEvolvablePokemon.includes(charizardPokemon)))
+                }
                 className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
               >
                 Mega Evolve
