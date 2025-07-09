@@ -1,5 +1,5 @@
-import { Link } from "wouter";
-import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useState, useCallback } from "react";
 
 export default function TrainerSetup() {
   const [trainer1Name, setTrainer1Name] = useState("Ash");
@@ -8,6 +8,14 @@ export default function TrainerSetup() {
   const [trainer2Pokemon, setTrainer2Pokemon] = useState("Charizard");
   const [showTrainer1Config, setShowTrainer1Config] = useState(false);
   const [showTrainer2Config, setShowTrainer2Config] = useState(false);
+  const [, setLocation] = useLocation();
+
+  const handleStartBattle = useCallback(() => {
+    localStorage.setItem("trainer1Pokemon", trainer1Pokemon);
+    localStorage.setItem("trainer2Pokemon", trainer2Pokemon);
+    setLocation("/battle/1");
+  }, [trainer1Pokemon, trainer2Pokemon, setLocation]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
       <div className="bg-white rounded-lg shadow-xl p-8 max-w-md w-full mx-4">
@@ -23,14 +31,12 @@ export default function TrainerSetup() {
             <p className="text-sm text-gray-600">Trainer 1: {trainer1Name} with {trainer1Pokemon}</p>
             <p className="text-sm text-gray-600">Trainer 2: {trainer2Name} with {trainer2Pokemon}</p>
           </div>
-          
           <button 
             onClick={() => setShowTrainer1Config(!showTrainer1Config)}
             className="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Configure Trainer 1
           </button>
-          
           {showTrainer1Config && (
             <div className="bg-blue-50 rounded-lg p-4 space-y-3">
               <input
@@ -53,14 +59,12 @@ export default function TrainerSetup() {
               </select>
             </div>
           )}
-          
           <button 
             onClick={() => setShowTrainer2Config(!showTrainer2Config)}
             className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
           >
             Configure Trainer 2
           </button>
-          
           {showTrainer2Config && (
             <div className="bg-red-50 rounded-lg p-4 space-y-3">
               <input
@@ -83,12 +87,12 @@ export default function TrainerSetup() {
               </select>
             </div>
           )}
-          
-          <Link href="/battle/1">
-            <button className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
-              Start Battle
-            </button>
-          </Link>
+          <button
+            className="w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
+            onClick={handleStartBattle}
+          >
+            Start Battle
+          </button>
           <Link href="/">
             <button className="w-full bg-gray-500 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
               Back to Home
