@@ -20,6 +20,8 @@ export default function Battle() {
   const [pikachuPotions, setPikachuPotions] = useState(3);
   const [charizardPotions, setCharizardPotions] = useState(3);
   const [showPotionMenu, setShowPotionMenu] = useState(false);
+  const [selectedMove, setSelectedMove] = useState<string>('');
+  const [showMoveMenu, setShowMoveMenu] = useState(false);
 
   const [, setLocation] = useLocation();
 
@@ -29,24 +31,82 @@ export default function Battle() {
     setLocation("/battle/1");
   }, [pikachuPokemon, charizardPokemon, setLocation]);
 
-  // Pokémon moves mapping
-  const pokemonMoves: { [key: string]: { normal: string; mega: string } } = {
-    'Pikachu': { normal: 'Thunderbolt', mega: 'Thunderbolt' },
-    'Charizard': { normal: 'Flamethrower', mega: 'Mega Flamethrower' },
-    'Blastoise': { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' },
-    'Venusaur': { normal: 'Solar Beam', mega: 'Mega Solar Beam' },
-    'Gyarados': { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' }
+  // Pokémon types and moves mapping
+  const pokemonData: { [key: string]: { type: string; moves: { normal: string; mega: string } } } = {
+    'Pikachu': { type: 'Electric', moves: { normal: 'Thunderbolt', mega: 'Thunderbolt' } },
+    'Charizard': { type: 'Fire', moves: { normal: 'Flamethrower', mega: 'Mega Flamethrower' } },
+    'Blastoise': { type: 'Water', moves: { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' } },
+    'Venusaur': { type: 'Grass', moves: { normal: 'Solar Beam', mega: 'Mega Solar Beam' } },
+    'Gyarados': { type: 'Water', moves: { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' } }
+  };
+
+  // Extended Pokémon data with multiple moves
+  const pokemonMovesData: { [key: string]: { type: string; moves: string[]; megaMoves: string[] } } = {
+    'Pikachu': { 
+      type: 'Electric', 
+      moves: ['Thunderbolt', 'Quick Attack', 'Thunder Wave', 'Iron Tail'],
+      megaMoves: ['Thunderbolt', 'Quick Attack', 'Thunder Wave', 'Iron Tail']
+    },
+    'Charizard': { 
+      type: 'Fire', 
+      moves: ['Flamethrower', 'Air Slash', 'Dragon Claw', 'Earthquake'],
+      megaMoves: ['Mega Flamethrower', 'Mega Air Slash', 'Dragon Claw', 'Earthquake']
+    },
+    'Blastoise': { 
+      type: 'Water', 
+      moves: ['Hydro Pump', 'Ice Beam', 'Skull Bash', 'Flash Cannon'],
+      megaMoves: ['Mega Hydro Pump', 'Mega Ice Beam', 'Skull Bash', 'Flash Cannon']
+    },
+    'Venusaur': { 
+      type: 'Grass', 
+      moves: ['Solar Beam', 'Sludge Bomb', 'Earthquake', 'Sleep Powder'],
+      megaMoves: ['Mega Solar Beam', 'Sludge Bomb', 'Earthquake', 'Sleep Powder']
+    },
+    'Gyarados': { 
+      type: 'Water', 
+      moves: ['Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder'],
+      megaMoves: ['Mega Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder']
+    }
+  };
+
+  // Type effectiveness chart
+  const typeEffectiveness: { [key: string]: { [key: string]: number } } = {
+    'Fire': { Grass: 2.0, Water: 0.5, Fire: 0.5 },
+    'Water': { Fire: 2.0, Grass: 0.5, Water: 0.5 },
+    'Grass': { Water: 2.0, Fire: 0.5, Grass: 0.5 },
+    'Electric': { Water: 2.0, Grass: 0.5, Electric: 0.5 }
+  };
+
+  const getTypeEffectiveness = (attackType: string, defenderType: string): number => {
+    return typeEffectiveness[attackType]?.[defenderType] || 1.0;
   };
 
   const getPokemonMove = (pokemonName: string, isMega: boolean) => {
-    const moves = pokemonMoves[pokemonName];
-    if (!moves) {
+    const pokemon = pokemonData[pokemonName];
+    if (!pokemon) {
       return isMega ? 'Mega Attack' : 'Tackle'; // Default moves for unknown Pokémon
     }
-    return isMega ? moves.mega : moves.normal;
+    return isMega ? pokemon.moves.mega : pokemon.moves.normal;
   };
 
-  const handleAttack = () => {
+  const getPokemonType = (pokemonName: string) => {
+    return pokemonData[pokemonName]?.type || 'Normal';
+  };
+
+  // Pokémon images (using emoji as placeholders)
+  const pokemonImages: { [key: string]: string } = {
+    'Pikachu': '⚡',
+    'Charizard': '🔥',
+    'Blastoise': '💧',
+    'Venusaur': '🌿',
+    'Gyarados': '🐉'
+  };
+
+  const getPokemonImage = (pokemonName: string) => {
+    return pokemonImages[pokemonName] || '❓';
+  };
+
+  const handleAttack = (moveName?: string) => {
     let baseDamage = Math.floor(Math.random() * 20) + 10; // Random damage between 10-30
     
     // Mega evolution bonus
@@ -57,21 +117,51 @@ export default function Battle() {
     }
     
     if (currentTurn === 'pikachu') {
-      const newHP = Math.max(0, charizardHP - baseDamage);
+      const attackType = getPokemonType(pikachuPokemon);
+      const defenderType = getPokemonType(charizardPokemon);
+      const effectiveness = getTypeEffectiveness(attackType, defenderType);
+      const finalDamage = Math.floor(baseDamage * effectiveness);
+      
+      const newHP = Math.max(0, charizardHP - finalDamage);
       setCharizardHP(newHP);
-      const attackName = getPokemonMove(pikachuPokemon, pikachuMega);
-      setBattleLog(prev => [...prev, `${pikachuPokemon} uses ${attackName} for ${baseDamage} damage!`]);
+      const attackName = moveName || getPokemonMove(pikachuPokemon, pikachuMega);
+      
+      let effectivenessMessage = '';
+      if (effectiveness > 1.0) {
+        effectivenessMessage = ' It\'s super effective!';
+      } else if (effectiveness < 1.0) {
+        effectivenessMessage = ' It\'s not very effective...';
+      }
+      
+      setBattleLog(prev => [...prev, `${pikachuPokemon} uses ${attackName} for ${finalDamage} damage!${effectivenessMessage}`]);
       setCurrentTurn('charizard');
+      setSelectedMove('');
+      setShowMoveMenu(false);
       
       if (newHP <= 0) {
         setBattleLog(prev => [...prev, `${charizardPokemon} fainted! ${pikachuPokemon} wins!`]);
       }
     } else {
-      const newHP = Math.max(0, pikachuHP - baseDamage);
+      const attackType = getPokemonType(charizardPokemon);
+      const defenderType = getPokemonType(pikachuPokemon);
+      const effectiveness = getTypeEffectiveness(attackType, defenderType);
+      const finalDamage = Math.floor(baseDamage * effectiveness);
+      
+      const newHP = Math.max(0, pikachuHP - finalDamage);
       setPikachuHP(newHP);
-      const attackName = getPokemonMove(charizardPokemon, charizardMega);
-      setBattleLog(prev => [...prev, `${charizardPokemon} uses ${attackName} for ${baseDamage} damage!`]);
+      const attackName = moveName || getPokemonMove(charizardPokemon, charizardMega);
+      
+      let effectivenessMessage = '';
+      if (effectiveness > 1.0) {
+        effectivenessMessage = ' It\'s super effective!';
+      } else if (effectiveness < 1.0) {
+        effectivenessMessage = ' It\'s not very effective...';
+      }
+      
+      setBattleLog(prev => [...prev, `${charizardPokemon} uses ${attackName} for ${finalDamage} damage!${effectivenessMessage}`]);
       setCurrentTurn('pikachu');
+      setSelectedMove('');
+      setShowMoveMenu(false);
       
       if (newHP <= 0) {
         setBattleLog(prev => [...prev, `${pikachuPokemon} fainted! ${charizardPokemon} wins!`]);
@@ -142,6 +232,8 @@ export default function Battle() {
     setPikachuPotions(3);
     setCharizardPotions(3);
     setShowPotionMenu(false);
+    setShowMoveMenu(false);
+    setSelectedMove('');
   };
 
   const isGameOver = pikachuHP <= 0 || charizardHP <= 0;
@@ -158,9 +250,11 @@ export default function Battle() {
             <div className="space-y-2">
               <div className="bg-white rounded p-3">
                 <p className="font-medium">
+                  <span className="text-2xl mr-2">{getPokemonImage(pikachuPokemon)}</span>
                   {pikachuPokemon} {pikachuMega && <span className="text-purple-600">(Mega)</span>}
                 </p>
                 <p className="text-sm text-gray-600">HP: {pikachuHP}/100</p>
+                <p className="text-xs text-blue-600">Type: {getPokemonType(pikachuPokemon)}</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
                     className="bg-green-500 h-2 rounded-full transition-all duration-300" 
@@ -176,9 +270,11 @@ export default function Battle() {
             <div className="space-y-2">
               <div className="bg-white rounded p-3">
                 <p className="font-medium">
+                  <span className="text-2xl mr-2">{getPokemonImage(charizardPokemon)}</span>
                   {charizardPokemon} {charizardMega && <span className="text-purple-600">(Mega)</span>}
                 </p>
                 <p className="text-sm text-gray-600">HP: {charizardHP}/100</p>
+                <p className="text-xs text-blue-600">Type: {getPokemonType(charizardPokemon)}</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
                     className="bg-red-500 h-2 rounded-full transition-all duration-300" 
@@ -200,11 +296,33 @@ export default function Battle() {
           {!isGameOver ? (
             <div className="space-y-2">
               <button 
-                onClick={handleAttack}
+                onClick={() => setShowMoveMenu(!showMoveMenu)}
                 className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
               >
-                Attack
+                Choose Move
               </button>
+              
+              {showMoveMenu && !isGameOver && (
+                <div className="bg-yellow-50 rounded-lg p-4 space-y-2">
+                  <h3 className="font-semibold text-yellow-800">Choose Move:</h3>
+                  {(() => {
+                    const currentPokemon = currentTurn === 'pikachu' ? pikachuPokemon : charizardPokemon;
+                    const isMega = currentTurn === 'pikachu' ? pikachuMega : charizardMega;
+                    const moves = pokemonMovesData[currentPokemon];
+                    const moveList = isMega ? moves?.megaMoves : moves?.moves;
+                    
+                    return moveList?.map(move => (
+                      <button
+                        key={move}
+                        onClick={() => handleAttack(move)}
+                        className="w-full bg-white hover:bg-yellow-100 text-gray-800 font-medium py-2 px-4 rounded border transition-colors"
+                      >
+                        {move}
+                      </button>
+                    )) || [];
+                  })()}
+                </div>
+              )}
               
               <button 
                 onClick={handleUsePotion}
@@ -257,11 +375,28 @@ export default function Battle() {
           )}
           
           {battleLog.length > 0 && (
-            <div className="bg-gray-100 rounded-lg p-4 max-h-32 overflow-y-auto">
+            <div className="bg-gray-100 rounded-lg p-4 max-h-48 overflow-y-auto">
               <h3 className="font-semibold text-gray-800 mb-2">Battle Log:</h3>
-              {battleLog.map((log, index) => (
-                <p key={index} className="text-sm text-gray-600">{log}</p>
-              ))}
+              <div className="space-y-1">
+                {battleLog.map((log, index) => (
+                  <div key={index} className="flex items-start space-x-2">
+                    <span className="text-xs text-gray-500 font-mono min-w-[60px]">
+                      {String(index + 1).padStart(2, '0')}
+                    </span>
+                    <p className="text-sm text-gray-700 flex-1">
+                      {log.includes('super effective') && (
+                        <span className="text-green-600 font-semibold">⚡ {log}</span>
+                      )}
+                      {log.includes('not very effective') && (
+                        <span className="text-red-600 font-semibold">🛡️ {log}</span>
+                      )}
+                      {!log.includes('super effective') && !log.includes('not very effective') && (
+                        <span>{log}</span>
+                      )}
+                    </p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
           
