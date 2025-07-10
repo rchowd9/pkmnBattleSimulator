@@ -55,7 +55,8 @@ export default function TrainerSetup() {
                 <option value="Charizard">Charizard</option>
                 <option value="Blastoise">Blastoise</option>
                 <option value="Venusaur">Venusaur</option>
-                <option value="Gyarados">Gyarados</option>
+                <option value="Gengar">Gengar</option>
+                <option value="Alakazam">Alakazam</option>
               </select>
             </div>
           )}
@@ -79,11 +80,12 @@ export default function TrainerSetup() {
                 onChange={(e) => setTrainer2Pokemon(e.target.value)}
                 className="w-full p-2 border rounded"
               >
-                <option value="Charizard">Charizard</option>
                 <option value="Pikachu">Pikachu</option>
+                <option value="Charizard">Charizard</option>
                 <option value="Blastoise">Blastoise</option>
                 <option value="Venusaur">Venusaur</option>
-                <option value="Gyarados">Gyarados</option>
+                <option value="Gengar">Gengar</option>
+                <option value="Alakazam">Alakazam</option>
               </select>
             </div>
           )}
