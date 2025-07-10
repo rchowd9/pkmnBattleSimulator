@@ -40,7 +40,7 @@ export default function Battle() {
     'Gyarados': { type: 'Water', moves: { normal: 'Hydro Pump', mega: 'Mega Hydro Pump' } }
   };
 
-  // Extended Pokémon data with multiple moves
+  // Extended Pokémon data with multiple moves and dual types
   const pokemonMovesData: { [key: string]: { type: string; moves: string[]; megaMoves: string[] } } = {
     'Pikachu': { 
       type: 'Electric', 
@@ -64,6 +64,35 @@ export default function Battle() {
     },
     'Gyarados': { 
       type: 'Water', 
+      moves: ['Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder'],
+      megaMoves: ['Mega Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder']
+    }
+  };
+
+  // Pokémon data with dual types support
+  const pokemonTypesData: { [key: string]: { types: string[]; moves: string[]; megaMoves: string[] } } = {
+    'Pikachu': { 
+      types: ['Electric'], 
+      moves: ['Thunderbolt', 'Quick Attack', 'Thunder Wave', 'Iron Tail'],
+      megaMoves: ['Thunderbolt', 'Quick Attack', 'Thunder Wave', 'Iron Tail']
+    },
+    'Charizard': { 
+      types: ['Fire', 'Flying'], 
+      moves: ['Flamethrower', 'Air Slash', 'Dragon Claw', 'Earthquake'],
+      megaMoves: ['Mega Flamethrower', 'Air Slash', 'Dragon Claw', 'Earthquake']
+    },
+    'Blastoise': { 
+      types: ['Water'], 
+      moves: ['Hydro Pump', 'Ice Beam', 'Skull Bash', 'Flash Cannon'],
+      megaMoves: ['Mega Hydro Pump', 'Ice Beam', 'Skull Bash', 'Flash Cannon']
+    },
+    'Venusaur': { 
+      types: ['Grass', 'Poison'], 
+      moves: ['Solar Beam', 'Sludge Bomb', 'Earthquake', 'Sleep Powder'],
+      megaMoves: ['Mega Solar Beam', 'Sludge Bomb', 'Earthquake', 'Sleep Powder']
+    },
+    'Gyarados': { 
+      types: ['Water', 'Flying'], 
       moves: ['Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder'],
       megaMoves: ['Mega Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder']
     }
@@ -165,8 +194,18 @@ export default function Battle() {
     }
   };
 
-  const getTypeEffectiveness = (attackType: string, defenderType: string): number => {
-    return typeEffectiveness[attackType]?.[defenderType] || 1.0;
+  // Calculate type effectiveness for dual types
+  const getTypeEffectiveness = (attackType: string, defenderTypes: string[]): number => {
+    if (defenderTypes.length === 0) return 1.0;
+    
+    let totalEffectiveness = 1.0;
+    
+    for (const defenderType of defenderTypes) {
+      const effectiveness = typeEffectiveness[attackType]?.[defenderType] || 1.0;
+      totalEffectiveness *= effectiveness;
+    }
+    
+    return totalEffectiveness;
   };
 
   const getPokemonMove = (pokemonName: string, isMega: boolean) => {
@@ -177,8 +216,13 @@ export default function Battle() {
     return isMega ? pokemon.moves.mega : pokemon.moves.normal;
   };
 
+  const getPokemonTypes = (pokemonName: string): string[] => {
+    return pokemonTypesData[pokemonName]?.types || ['Normal'];
+  };
+
   const getPokemonType = (pokemonName: string) => {
-    return pokemonData[pokemonName]?.type || 'Normal';
+    const types = getPokemonTypes(pokemonName);
+    return types.join('/');
   };
 
   // Pokémon images (using emoji as placeholders)
@@ -207,8 +251,8 @@ export default function Battle() {
     if (currentTurn === 'pikachu') {
       const attackName = moveName || getPokemonMove(pikachuPokemon, pikachuMega);
       const attackType = getMoveType(attackName);
-      const defenderType = getPokemonType(charizardPokemon);
-      const effectiveness = getTypeEffectiveness(attackType, defenderType);
+      const defenderTypes = getPokemonTypes(charizardPokemon);
+      const effectiveness = getTypeEffectiveness(attackType, defenderTypes);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
       const newHP = Math.max(0, charizardHP - finalDamage);
@@ -234,8 +278,8 @@ export default function Battle() {
     } else {
       const attackName = moveName || getPokemonMove(charizardPokemon, charizardMega);
       const attackType = getMoveType(attackName);
-      const defenderType = getPokemonType(pikachuPokemon);
-      const effectiveness = getTypeEffectiveness(attackType, defenderType);
+      const defenderTypes = getPokemonTypes(pikachuPokemon);
+      const effectiveness = getTypeEffectiveness(attackType, defenderTypes);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
       const newHP = Math.max(0, pikachuHP - finalDamage);
@@ -400,7 +444,7 @@ export default function Battle() {
                   {(() => {
                     const currentPokemon = currentTurn === 'pikachu' ? pikachuPokemon : charizardPokemon;
                     const isMega = currentTurn === 'pikachu' ? pikachuMega : charizardMega;
-                    const moves = pokemonMovesData[currentPokemon];
+                    const moves = pokemonTypesData[currentPokemon];
                     const moveList = isMega ? moves?.megaMoves : moves?.moves;
                     
                     return moveList?.map(move => (
