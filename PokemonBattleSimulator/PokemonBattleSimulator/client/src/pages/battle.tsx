@@ -69,8 +69,9 @@ export default function Battle() {
     }
   };
 
-  // Pokémon data with dual types support
-  const pokemonTypesData: { [key: string]: { types: string[]; moves: string[]; megaMoves: string[] } } = {
+  // Pokémon data with dual types support and Mega Evolution typings
+  // Note: Most Mega Evolutions don't change types, only Charizard X and Gyarados do
+  const pokemonTypesData: { [key: string]: { types: string[]; megaTypes?: string[]; moves: string[]; megaMoves: string[] } } = {
     'Pikachu': { 
       types: ['Electric'], 
       moves: ['Thunderbolt', 'Quick Attack', 'Thunder Wave', 'Iron Tail'],
@@ -78,6 +79,7 @@ export default function Battle() {
     },
     'Charizard': { 
       types: ['Fire', 'Flying'], 
+      megaTypes: ['Fire', 'Dragon'], // Mega Charizard X becomes Fire/Dragon
       moves: ['Flamethrower', 'Air Slash', 'Dragon Claw', 'Earthquake'],
       megaMoves: ['Mega Flamethrower', 'Air Slash', 'Dragon Claw', 'Earthquake']
     },
@@ -93,8 +95,34 @@ export default function Battle() {
     },
     'Gyarados': { 
       types: ['Water', 'Flying'], 
+      megaTypes: ['Water', 'Dark'], // Mega Gyarados becomes Water/Dark
       moves: ['Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder'],
       megaMoves: ['Mega Hydro Pump', 'Dragon Rage', 'Hyper Beam', 'Thunder']
+    },
+    'Gengar': { 
+      types: ['Ghost', 'Poison'], 
+      moves: ['Shadow Ball', 'Sludge Bomb', 'Psychic', 'Thunderbolt'],
+      megaMoves: ['Mega Shadow Ball', 'Sludge Bomb', 'Psychic', 'Thunderbolt']
+    },
+    'Alakazam': { 
+      types: ['Psychic'], 
+      moves: ['Psychic', 'Shadow Ball', 'Focus Blast', 'Energy Ball'],
+      megaMoves: ['Mega Psychic', 'Shadow Ball', 'Focus Blast', 'Energy Ball']
+    },
+    'Machamp': { 
+      types: ['Fighting'], 
+      moves: ['Dynamic Punch', 'Rock Slide', 'Earthquake', 'Ice Punch'],
+      megaMoves: ['Mega Dynamic Punch', 'Rock Slide', 'Earthquake', 'Ice Punch']
+    },
+    'Steelix': { 
+      types: ['Steel', 'Ground'], 
+      moves: ['Iron Tail', 'Earthquake', 'Rock Slide', 'Crunch'],
+      megaMoves: ['Mega Iron Tail', 'Earthquake', 'Rock Slide', 'Crunch']
+    },
+    'Scizor': { 
+      types: ['Bug', 'Steel'], 
+      moves: ['X-Scissor', 'Bullet Punch', 'Iron Head', 'Wing Attack'],
+      megaMoves: ['Mega X-Scissor', 'Bullet Punch', 'Iron Head', 'Wing Attack']
     }
   };
 
@@ -129,7 +157,32 @@ export default function Battle() {
     // Gyarados moves
     'Dragon Rage': 'Dragon',
     'Hyper Beam': 'Normal',
-    'Thunder': 'Electric'
+    'Thunder': 'Electric',
+    
+    // Gengar moves
+    'Shadow Ball': 'Ghost',
+    'Mega Shadow Ball': 'Ghost',
+    
+    // Alakazam moves
+    'Focus Blast': 'Fighting',
+    'Energy Ball': 'Grass',
+    
+    // Machamp moves
+    'Dynamic Punch': 'Fighting',
+    'Mega Dynamic Punch': 'Fighting',
+    'Rock Slide': 'Rock',
+    'Ice Punch': 'Ice',
+    
+    // Steelix moves
+    'Mega Iron Tail': 'Steel',
+    'Crunch': 'Dark',
+    
+    // Scizor moves
+    'X-Scissor': 'Bug',
+    'Mega X-Scissor': 'Bug',
+    'Bullet Punch': 'Steel',
+    'Iron Head': 'Steel',
+    'Wing Attack': 'Flying'
   };
 
   const getMoveType = (moveName: string): string => {
@@ -225,13 +278,34 @@ export default function Battle() {
     return types.join('/');
   };
 
+  // Get Pokémon types considering Mega Evolution state
+  const getPokemonTypesWithMega = (pokemonName: string, isMega: boolean): string[] => {
+    const pokemon = pokemonTypesData[pokemonName];
+    if (!pokemon) return ['Normal'];
+    
+    if (isMega && pokemon.megaTypes) {
+      return pokemon.megaTypes;
+    }
+    return pokemon.types;
+  };
+
+  const getPokemonTypeWithMega = (pokemonName: string, isMega: boolean) => {
+    const types = getPokemonTypesWithMega(pokemonName, isMega);
+    return types.join('/');
+  };
+
   // Pokémon images (using emoji as placeholders)
   const pokemonImages: { [key: string]: string } = {
     'Pikachu': '⚡',
     'Charizard': '🔥',
     'Blastoise': '💧',
     'Venusaur': '🌿',
-    'Gyarados': '🐉'
+    'Gyarados': '🐉',
+    'Gengar': '👻',
+    'Alakazam': '🧠',
+    'Machamp': '💪',
+    'Steelix': '🔗',
+    'Scizor': '✂️'
   };
 
   const getPokemonImage = (pokemonName: string) => {
@@ -251,7 +325,7 @@ export default function Battle() {
     if (currentTurn === 'pikachu') {
       const attackName = moveName || getPokemonMove(pikachuPokemon, pikachuMega);
       const attackType = getMoveType(attackName);
-      const defenderTypes = getPokemonTypes(charizardPokemon);
+      const defenderTypes = getPokemonTypesWithMega(charizardPokemon, charizardMega);
       const effectiveness = getTypeEffectiveness(attackType, defenderTypes);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
@@ -278,7 +352,7 @@ export default function Battle() {
     } else {
       const attackName = moveName || getPokemonMove(charizardPokemon, charizardMega);
       const attackType = getMoveType(attackName);
-      const defenderTypes = getPokemonTypes(pikachuPokemon);
+      const defenderTypes = getPokemonTypesWithMega(pikachuPokemon, pikachuMega);
       const effectiveness = getTypeEffectiveness(attackType, defenderTypes);
       const finalDamage = Math.floor(baseDamage * effectiveness);
       
@@ -306,7 +380,7 @@ export default function Battle() {
   };
 
   // List of Pokémon that can Mega Evolve
-  const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gyarados'];
+  const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gyarados', 'Gengar', 'Alakazam', 'Machamp', 'Steelix', 'Scizor'];
 
   const handleMegaEvolve = () => {
     if (currentTurn === 'pikachu' && !pikachuMega && megaEvolvablePokemon.includes(pikachuPokemon)) {
@@ -390,7 +464,7 @@ export default function Battle() {
                   {pikachuPokemon} {pikachuMega && <span className="text-purple-600">(Mega)</span>}
                 </p>
                 <p className="text-sm text-gray-600">HP: {pikachuHP}/100</p>
-                <p className="text-xs text-blue-600">Type: {getPokemonType(pikachuPokemon)}</p>
+                <p className="text-xs text-blue-600">Type: {getPokemonTypeWithMega(pikachuPokemon, pikachuMega)}</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
                     className="bg-green-500 h-2 rounded-full transition-all duration-300" 
@@ -410,7 +484,7 @@ export default function Battle() {
                   {charizardPokemon} {charizardMega && <span className="text-purple-600">(Mega)</span>}
                 </p>
                 <p className="text-sm text-gray-600">HP: {charizardHP}/100</p>
-                <p className="text-xs text-blue-600">Type: {getPokemonType(charizardPokemon)}</p>
+                <p className="text-xs text-blue-600">Type: {getPokemonTypeWithMega(charizardPokemon, charizardMega)}</p>
                 <div className="w-full bg-gray-200 rounded-full h-2 mt-2">
                   <div 
                     className="bg-red-500 h-2 rounded-full transition-all duration-300" 
@@ -498,7 +572,7 @@ export default function Battle() {
           {showSwapMenu && !isGameOver && (
             <div className="bg-blue-50 rounded-lg p-4 space-y-2">
               <h3 className="font-semibold text-blue-800">Choose Pokémon:</h3>
-              {['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Gyarados'].map(pokemon => (
+              {['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Gyarados', 'Gengar', 'Alakazam', 'Machamp', 'Steelix', 'Scizor'].map(pokemon => (
                 <button
                   key={pokemon}
                   onClick={() => handleSwapPokemon(pokemon)}
