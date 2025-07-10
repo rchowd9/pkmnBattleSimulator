@@ -380,7 +380,7 @@ export default function Battle() {
   };
 
   // List of Pokémon that can Mega Evolve
-  const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gyarados', 'Gengar', 'Alakazam', 'Machamp', 'Steelix', 'Scizor'];
+  const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gengar', 'Alakazam'];
 
   const handleMegaEvolve = () => {
     if (currentTurn === 'pikachu' && !pikachuMega && megaEvolvablePokemon.includes(pikachuPokemon)) {
@@ -572,7 +572,7 @@ export default function Battle() {
           {showSwapMenu && !isGameOver && (
             <div className="bg-blue-50 rounded-lg p-4 space-y-2">
               <h3 className="font-semibold text-blue-800">Choose Pokémon:</h3>
-              {['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Gyarados', 'Gengar', 'Alakazam', 'Machamp', 'Steelix', 'Scizor'].map(pokemon => (
+              {['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Gengar', 'Alakazam'].map(pokemon => (
                 <button
                   key={pokemon}
                   onClick={() => handleSwapPokemon(pokemon)}
