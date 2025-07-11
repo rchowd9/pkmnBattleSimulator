@@ -16,6 +16,14 @@ export default function Battle() {
   const [trainer2TeamState, setTrainer2Team] = useState(trainer2Team);
   // Use trainer1TeamState and trainer2TeamState throughout the file for updates.
 
+  // Always sync teams from localStorage on mount/route change
+  useEffect(() => {
+    const t1 = JSON.parse(localStorage.getItem("trainer1Team") || '["Pikachu","Pikachu","Pikachu","Pikachu","Pikachu","Pikachu"]');
+    const t2 = JSON.parse(localStorage.getItem("trainer2Team") || '["Charizard","Charizard","Charizard","Charizard","Charizard","Charizard"]');
+    setTrainer1Team(t1);
+    setTrainer2Team(t2);
+  }, [battleId]);
+
   // --- TEAM-BASED STATE & HELPERS ---
   // State for each trainer: team, activeIndex, hp, mega, potions
   // Helper functions for getting/setting active Pokémon, HP, Mega, Potions
