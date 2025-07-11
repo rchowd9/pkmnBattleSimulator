@@ -484,7 +484,7 @@ export default function Battle() {
   // AI logic: decide and perform action for Trainer 2
   // --- SMART AI SWITCHING LOGIC (Step 3 Final, Integrated) ---
   useEffect(() => {
-    if (!trainer2IsAI) return;
+    if (!trainer2IsAI || currentTurn !== 'charizard') return;
 
     // Helper: Find best AI switch candidate (least expected damage from player's best move)
     function findBestAISwitch(): number | null {
@@ -615,7 +615,7 @@ export default function Battle() {
             </div>
           </div>
           <div className="bg-red-100 rounded-lg p-6">
-            <h2 className="text-xl font-semibold text-red-800 mb-4">Trainer 2</h2>
+            <h2 className="text-xl font-semibold text-red-800 mb-4">{trainer2IsAI ? 'AI' : 'Trainer 2'}</h2>
             <div className="space-y-2">
               {trainer2TeamState.map((pokemon, index) => (
                 <div key={index} className="bg-white rounded p-3">
@@ -640,68 +640,131 @@ export default function Battle() {
         <div className="text-center space-y-4">
           <div className="mb-4">
             <p className="text-lg font-semibold text-gray-700">
-              Current Turn: {currentTurn === 'pikachu' ? getActivePokemon(trainer1TeamState, trainer1Active) : getActivePokemon(trainer2TeamState, trainer2Active)}
+              Current Turn: {currentTurn === 'pikachu' ? getActivePokemon(trainer1TeamState, trainer1Active) : (trainer2IsAI ? 'AI' : getActivePokemon(trainer2TeamState, trainer2Active))}
             </p>
           </div>
           
-          {!isGameOver ? (
-            <div className="space-y-2">
-              <button 
-                onClick={() => setShowMoveMenu(!showMoveMenu)}
-                className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
-              >
-                Choose Move
-              </button>
-              
-              {showMoveMenu && !isGameOver && (
-                <div className="bg-yellow-50 rounded-lg p-4 space-y-2">
-                  <h3 className="font-semibold text-yellow-800">Choose Move:</h3>
-                  {(() => {
-                    const currentPokemon = currentTurn === 'pikachu' ? getActivePokemon(trainer1TeamState, trainer1Active) : getActivePokemon(trainer2TeamState, trainer2Active);
-                    const isMega = currentTurn === 'pikachu' ? getActiveMega(trainer1Mega, trainer1Active) : getActiveMega(trainer2Mega, trainer2Active);
-                    const moves = pokemonTypesData[currentPokemon];
-                    const moveList = isMega ? moves?.megaMoves : moves?.moves;
-                    
-                    return moveList?.map(move => (
-                      <button
-                        key={move}
-                        onClick={() => handleAttack(move)}
-                        className="w-full bg-white hover:bg-yellow-100 text-gray-800 font-medium py-2 px-4 rounded border transition-colors"
-                      >
-                        {move}
-                      </button>
-                    )) || [];
-                  })()}
+          {!isGameOver && (
+            <>
+              {currentTurn === 'pikachu' ? (
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => setShowMoveMenu(!showMoveMenu)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
+                  >
+                    Choose Move
+                  </button>
+                  
+                  {showMoveMenu && !isGameOver && (
+                    <div className="bg-yellow-50 rounded-lg p-4 space-y-2">
+                      <h3 className="font-semibold text-yellow-800">Choose Move:</h3>
+                      {(() => {
+                        const currentPokemon = getActivePokemon(trainer1TeamState, trainer1Active);
+                        const isMega = getActiveMega(trainer1Mega, trainer1Active);
+                        const moves = pokemonTypesData[currentPokemon];
+                        const moveList = isMega ? moves?.megaMoves : moves?.moves;
+                        
+                        return moveList?.map(move => (
+                          <button
+                            key={move}
+                            onClick={() => handleAttack(move)}
+                            className="w-full bg-white hover:bg-yellow-100 text-gray-800 font-medium py-2 px-4 rounded border transition-colors"
+                          >
+                            {move}
+                          </button>
+                        )) || [];
+                      })()}
+                    </div>
+                  )}
+                  
+                  <button 
+                    onClick={handleUsePotion}
+                    disabled={getActivePotions(trainer1Potions, trainer1Active) === 0}
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Use Potion ({getActivePotions(trainer1Potions, trainer1Active)} left)
+                  </button>
+                  
+                  <button 
+                    onClick={handleMegaEvolve}
+                    disabled={getActiveMega(trainer1Mega, trainer1Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active))}
+                    className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Mega Evolve
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowSwapMenu(!showSwapMenu)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Swap Pokémon
+                  </button>
+                </div>
+              ) : currentTurn === 'charizard' && trainer2IsAI ? (
+                <div className="space-y-2">
+                  <div className="bg-yellow-100 rounded-lg p-4">
+                    <p className="text-lg font-semibold text-yellow-800">AI is thinking...</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <button 
+                    onClick={() => setShowMoveMenu(!showMoveMenu)}
+                    className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors w-full"
+                  >
+                    Choose Move
+                  </button>
+                  
+                  {showMoveMenu && !isGameOver && (
+                    <div className="bg-yellow-50 rounded-lg p-4 space-y-2">
+                      <h3 className="font-semibold text-yellow-800">Choose Move:</h3>
+                      {(() => {
+                        const currentPokemon = getActivePokemon(trainer2TeamState, trainer2Active);
+                        const isMega = getActiveMega(trainer2Mega, trainer2Active);
+                        const moves = pokemonTypesData[currentPokemon];
+                        const moveList = isMega ? moves?.megaMoves : moves?.moves;
+                        
+                        return moveList?.map(move => (
+                          <button
+                            key={move}
+                            onClick={() => handleAttack(move)}
+                            className="w-full bg-white hover:bg-yellow-100 text-gray-800 font-medium py-2 px-4 rounded border transition-colors"
+                          >
+                            {move}
+                          </button>
+                        )) || [];
+                      })()}
+                    </div>
+                  )}
+                  
+                  <button 
+                    onClick={handleUsePotion}
+                    disabled={getActivePotions(trainer2Potions, trainer2Active) === 0}
+                    className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Use Potion ({getActivePotions(trainer2Potions, trainer2Active)} left)
+                  </button>
+                  
+                  <button 
+                    onClick={handleMegaEvolve}
+                    disabled={getActiveMega(trainer2Mega, trainer2Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))}
+                    className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Mega Evolve
+                  </button>
+                  
+                  <button 
+                    onClick={() => setShowSwapMenu(!showSwapMenu)}
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
+                  >
+                    Swap Pokémon
+                  </button>
                 </div>
               )}
-              
-              <button 
-                onClick={handleUsePotion}
-                disabled={(currentTurn === 'pikachu' && getActivePotions(trainer1Potions, trainer1Active) === 0) || (currentTurn === 'charizard' && getActivePotions(trainer2Potions, trainer2Active) === 0)}
-                className="bg-green-500 hover:bg-green-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
-              >
-                Use Potion ({currentTurn === 'pikachu' ? getActivePotions(trainer1Potions, trainer1Active) : getActivePotions(trainer2Potions, trainer2Active)} left)
-              </button>
-              
-              <button 
-                onClick={handleMegaEvolve}
-                disabled={
-                  (currentTurn === 'pikachu' && (getActiveMega(trainer1Mega, trainer1Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active)))) || 
-                  (currentTurn === 'charizard' && (getActiveMega(trainer2Mega, trainer2Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))))
-                }
-                className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
-              >
-                Mega Evolve
-              </button>
-              
-              <button 
-                onClick={() => setShowSwapMenu(!showSwapMenu)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
-              >
-                Swap Pokémon
-              </button>
-            </div>
-          ) : (
+            </>
+          )}
+          
+          {isGameOver && (
             <button 
               onClick={resetBattle}
               className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors"
