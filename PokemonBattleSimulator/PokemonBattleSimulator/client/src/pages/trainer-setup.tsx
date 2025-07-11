@@ -67,12 +67,21 @@ export default function TrainerSetup() {
       let pool = [...available];
       while (aiTeam.length < 6) {
         if (pool.length === 0) {
-          pool = allowedPokemon.filter(p => !aiTeam.includes(p) && !playerSet.has(p));
-          if (pool.length === 0) break;
+          // Fill with any allowedPokemon not already in aiTeam (even if overlapping with player)
+          pool = allowedPokemon.filter(p => !aiTeam.includes(p));
         }
+        if (pool.length === 0) break; // Should never happen, but safety check
         const idx = Math.floor(Math.random() * pool.length);
         aiTeam.push(pool[idx]);
         pool.splice(idx, 1);
+      }
+      // If still not 6, fill with the first allowedPokemon not already in aiTeam
+      let i = 0;
+      while (aiTeam.length < 6 && i < allowedPokemon.length) {
+        if (!aiTeam.includes(allowedPokemon[i])) {
+          aiTeam.push(allowedPokemon[i]);
+        }
+        i++;
       }
       finalTrainer2Team = aiTeam;
       setTrainer2Team(aiTeam); // update state for UI consistency
@@ -191,4 +200,4 @@ export default function TrainerSetup() {
       </div>
     </div>
   );
-}  
+} 
