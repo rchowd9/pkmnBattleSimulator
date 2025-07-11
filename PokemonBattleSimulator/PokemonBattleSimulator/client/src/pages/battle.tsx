@@ -36,6 +36,8 @@ export default function Battle() {
   const [trainer2Mega, setTrainer2Mega] = useState(Array(6).fill(false));
   const [trainer1Potions, setTrainer1Potions] = useState(Array(6).fill(3));
   const [trainer2Potions, setTrainer2Potions] = useState(Array(6).fill(3));
+  const [trainer1HasMegaEvolved, setTrainer1HasMegaEvolved] = useState(false);
+  const [trainer2HasMegaEvolved, setTrainer2HasMegaEvolved] = useState(false);
 
   const [battleLog, setBattleLog] = useState<string[]>([]);
   const [currentTurn, setCurrentTurn] = useState<'pikachu' | 'charizard'>('pikachu');
@@ -420,12 +422,24 @@ export default function Battle() {
   const megaEvolvablePokemon = ['Charizard', 'Blastoise', 'Venusaur', 'Gengar', 'Alakazam'];
 
   const handleMegaEvolve = () => {
-    if (currentTurn === 'pikachu' && !getActiveMega(trainer1Mega, trainer1Active) && megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active))) {
+    if (
+      currentTurn === 'pikachu' &&
+      !trainer1HasMegaEvolved &&
+      !getActiveMega(trainer1Mega, trainer1Active) &&
+      megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active))
+    ) {
       setTrainer1Mega(prev => prev.map((mega, i) => i === trainer1Active ? true : mega));
+      setTrainer1HasMegaEvolved(true);
       setBattleLog(prev => [...prev, `${getActivePokemon(trainer1TeamState, trainer1Active)} Mega Evolves!`]);
       setCurrentTurn('charizard');
-    } else if (currentTurn === 'charizard' && !getActiveMega(trainer2Mega, trainer2Active) && megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))) {
+    } else if (
+      currentTurn === 'charizard' &&
+      !trainer2HasMegaEvolved &&
+      !getActiveMega(trainer2Mega, trainer2Active) &&
+      megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))
+    ) {
       setTrainer2Mega(prev => prev.map((mega, i) => i === trainer2Active ? true : mega));
+      setTrainer2HasMegaEvolved(true);
       setBattleLog(prev => [...prev, `${getActivePokemon(trainer2TeamState, trainer2Active)} Mega Evolves!`]);
       setCurrentTurn('pikachu');
     }
@@ -479,6 +493,8 @@ export default function Battle() {
     setTrainer2Active(0);
     setTrainer1Potions(Array(6).fill(3));
     setTrainer2Potions(Array(6).fill(3));
+    setTrainer1HasMegaEvolved(false);
+    setTrainer2HasMegaEvolved(false);
     setShowSwapMenu(false);
     setShowMoveMenu(false);
     setSelectedMove('');
@@ -599,7 +615,8 @@ export default function Battle() {
     trainer1Active, trainer1TeamState, trainer1Mega, trainer1HP, trainer2Potions, isGameOver,
     setTrainer2Active, setBattleLog, setCurrentTurn,
     getActiveHP, getActivePotions, getActiveMega, getActivePokemon, getPokemonTypesWithMega, getMoveType, getTypeEffectiveness,
-    megaEvolvablePokemon, handleUsePotion, handleMegaEvolve, handleAttack
+    megaEvolvablePokemon, handleUsePotion, handleMegaEvolve, handleAttack,
+    trainer1HasMegaEvolved, trainer2HasMegaEvolved
   ]);
 
 // --- SMART AI SWITCHING LOGIC (Step 3 Final) ---
@@ -711,7 +728,9 @@ export default function Battle() {
                   
                   <button 
                     onClick={handleMegaEvolve}
-                    disabled={getActiveMega(trainer1Mega, trainer1Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active))}
+                    disabled={
+                      trainer1HasMegaEvolved || getActiveMega(trainer1Mega, trainer1Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer1TeamState, trainer1Active))
+                    }
                     className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
                   >
                     Mega Evolve
@@ -771,7 +790,9 @@ export default function Battle() {
                   
                   <button 
                     onClick={handleMegaEvolve}
-                    disabled={getActiveMega(trainer2Mega, trainer2Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))}
+                    disabled={
+                      trainer2HasMegaEvolved || getActiveMega(trainer2Mega, trainer2Active) || !megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))
+                    }
                     className="bg-purple-500 hover:bg-purple-600 disabled:bg-gray-400 text-white font-semibold py-2 px-4 rounded-lg transition-colors w-full"
                   >
                     Mega Evolve
