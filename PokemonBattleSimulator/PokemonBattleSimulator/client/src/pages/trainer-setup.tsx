@@ -11,7 +11,11 @@ export default function TrainerSetup() {
   const [trainer2IsAI, setTrainer2IsAI] = useState(false);
   const [, setLocation] = useLocation();
 
-  const allowedPokemon = ["Pikachu", "Charizard", "Blastoise", "Venusaur", "Gengar", "Alakazam"];
+  // Expanded allowed Pokémon list (at least 12 unique)
+  const allowedPokemon = [
+    "Pikachu", "Charizard", "Blastoise", "Venusaur", "Gengar", "Alakazam",
+    "Machamp", "Steelix", "Scizor", "Gyarados", "Snorlax", "Dragonite"
+  ];
   const [trainer1Team, setTrainer1Team] = useState(Array(6).fill("Pikachu"));
   const [trainer2Team, setTrainer2Team] = useState(Array(6).fill("Charizard"));
 
@@ -58,30 +62,23 @@ export default function TrainerSetup() {
   }, [trainer2IsAI, trainer1Team]);
 
   const handleStartBattle = useCallback(() => {
+    // Enforce no overlap between player and AI teams
+    const playerSet = new Set(trainer1Team);
+    const available = allowedPokemon.filter(p => !playerSet.has(p));
+    if (available.length < 6) {
+      alert("Not enough unique Pokémon for both teams! Please pick fewer duplicates or expand the roster.");
+      return;
+    }
     let finalTrainer2Team = trainer2Team;
     if (trainer2IsAI) {
       // Always generate a fresh, unique AI team right before starting the battle
-      const playerSet = new Set(trainer1Team);
-      let available = allowedPokemon.filter(p => !playerSet.has(p));
       const aiTeam: string[] = [];
       let pool = [...available];
       while (aiTeam.length < 6) {
-        if (pool.length === 0) {
-          // Fill with any allowedPokemon not already in aiTeam (even if overlapping with player)
-          pool = allowedPokemon.filter(p => !aiTeam.includes(p));
-        }
-        if (pool.length === 0) break; // Should never happen, but safety check
+        if (pool.length === 0) break;
         const idx = Math.floor(Math.random() * pool.length);
         aiTeam.push(pool[idx]);
         pool.splice(idx, 1);
-      }
-      // If still not 6, fill with the first allowedPokemon not already in aiTeam
-      let i = 0;
-      while (aiTeam.length < 6 && i < allowedPokemon.length) {
-        if (!aiTeam.includes(allowedPokemon[i])) {
-          aiTeam.push(allowedPokemon[i]);
-        }
-        i++;
       }
       finalTrainer2Team = aiTeam;
       setTrainer2Team(aiTeam); // update state for UI consistency
