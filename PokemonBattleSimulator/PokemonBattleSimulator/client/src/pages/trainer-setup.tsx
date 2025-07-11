@@ -28,25 +28,25 @@ export default function TrainerSetup() {
     teamSetter(newTeam);
   };
 
-  // If AI, generate random team on start that doesn't overlap with player's team
+  // If AI, generate random team on start that doesn't overlap with player's team and has no duplicates
   const getRandomTeam = () => {
-    const playerPokemon = new Set(trainer1Team);
-    const availablePokemon = allowedPokemon.filter(p => !playerPokemon.has(p));
-    
-    // If not enough unique Pokémon, allow some overlap but prefer unique ones
-    const pool = [...availablePokemon];
-    if (pool.length < 6) {
-      const remaining = allowedPokemon.filter(p => !pool.includes(p));
-      pool.push(...remaining);
-    }
-    
-    const team = [];
-    for (let i = 0; i < 6; i++) {
+    const playerSet = new Set(trainer1Team);
+    // Exclude all Pokémon in the player's team
+    let available = allowedPokemon.filter(p => !playerSet.has(p));
+    // If not enough unique Pokémon, fill with remaining allowedPokemon (but no duplicates in AI team)
+    const aiTeam: string[] = [];
+    let pool = [...available];
+    while (aiTeam.length < 6) {
+      if (pool.length === 0) {
+        // Add back allowedPokemon not already in aiTeam
+        pool = allowedPokemon.filter(p => !aiTeam.includes(p) && !playerSet.has(p));
+        if (pool.length === 0) break; // Should never happen with 6 allowedPokemon
+      }
       const idx = Math.floor(Math.random() * pool.length);
-      team.push(pool[idx]);
+      aiTeam.push(pool[idx]);
       pool.splice(idx, 1);
     }
-    return team;
+    return aiTeam;
   };
 
   useEffect(() => {
@@ -55,7 +55,7 @@ export default function TrainerSetup() {
       setTrainer2Team(aiTeam);
       console.log('AI team generated:', aiTeam); // Debug log
     }
-  }, [trainer2IsAI, trainer1Team]); // Add trainer1Team as dependency
+  }, [trainer2IsAI, trainer1Team]);
 
   const handleStartBattle = useCallback(() => {
     localStorage.setItem("trainer1Team", JSON.stringify(trainer1Team));
@@ -173,4 +173,4 @@ export default function TrainerSetup() {
       </div>
     </div>
   );
-} 
+}  
