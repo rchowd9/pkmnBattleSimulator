@@ -161,68 +161,80 @@ export default function Battle() {
 
   // Move types - each move has its own type
   const moveTypes: { [key: string]: string } = {
-    // Pikachu moves
+    // Electric moves
     'Thunderbolt': 'Electric',
-    'Quick Attack': 'Normal',
     'Thunder Wave': 'Electric',
-    'Iron Tail': 'Steel',
-    
-    // Charizard moves
-    'Flamethrower': 'Fire',
-    'Mega Flamethrower': 'Fire',
-    'Air Slash': 'Flying',
-    'Dragon Claw': 'Dragon',
-    'Earthquake': 'Ground',
-    
-    // Blastoise moves
-    'Hydro Pump': 'Water',
-    'Mega Hydro Pump': 'Water',
-    'Ice Beam': 'Ice',
-    'Skull Bash': 'Normal',
-    'Flash Cannon': 'Steel',
-    
-    // Venusaur moves
-    'Solar Beam': 'Grass',
-    'Mega Solar Beam': 'Grass',
-    'Sludge Bomb': 'Poison',
-    'Sleep Powder': 'Grass',
-    
-    // Gyarados moves
-    'Dragon Rage': 'Dragon',
-    'Hyper Beam': 'Normal',
     'Thunder': 'Electric',
     
-    // Gengar moves
+    // Normal moves
+    'Quick Attack': 'Normal',
+    'Skull Bash': 'Normal',
+    'Hyper Beam': 'Normal',
+    'Body Slam': 'Normal',
+    
+    // Steel moves
+    'Iron Tail': 'Steel',
+    'Mega Iron Tail': 'Steel',
+    'Flash Cannon': 'Steel',
+    'Bullet Punch': 'Steel',
+    'Iron Head': 'Steel',
+    
+    // Fire moves
+    'Flamethrower': 'Fire',
+    'Mega Flamethrower': 'Fire',
+    'Fire Punch': 'Fire',
+    
+    // Flying moves
+    'Air Slash': 'Flying',
+    'Aerial Ace': 'Flying',
+    'Wing Attack': 'Flying',
+    
+    // Dragon moves
+    'Dragon Claw': 'Dragon',
+    'Dragon Rage': 'Dragon',
+    
+    // Ground moves
+    'Earthquake': 'Ground',
+    
+    // Water moves
+    'Hydro Pump': 'Water',
+    'Mega Hydro Pump': 'Water',
+    
+    // Ice moves
+    'Ice Beam': 'Ice',
+    'Ice Punch': 'Ice',
+    
+    // Grass moves
+    'Solar Beam': 'Grass',
+    'Mega Solar Beam': 'Grass',
+    'Sleep Powder': 'Grass',
+    'Energy Ball': 'Grass',
+    
+    // Poison moves
+    'Sludge Bomb': 'Poison',
+    
+    // Ghost moves
     'Shadow Ball': 'Ghost',
     'Mega Shadow Ball': 'Ghost',
     
-    // Alakazam moves
-    'Focus Blast': 'Fighting',
-    'Energy Ball': 'Grass',
+    // Psychic moves
+    'Psychic': 'Psychic',
+    'Mega Psychic': 'Psychic',
     
-    // Machamp moves
+    // Fighting moves
+    'Focus Blast': 'Fighting',
     'Dynamic Punch': 'Fighting',
     'Mega Dynamic Punch': 'Fighting',
-    'Rock Slide': 'Rock',
-    'Ice Punch': 'Ice',
     
-    // Steelix moves
-    'Mega Iron Tail': 'Steel',
+    // Rock moves
+    'Rock Slide': 'Rock',
+    
+    // Dark moves
     'Crunch': 'Dark',
     
-    // Scizor moves
+    // Bug moves
     'X-Scissor': 'Bug',
-    'Mega X-Scissor': 'Bug',
-    'Bullet Punch': 'Steel',
-    'Iron Head': 'Steel',
-    'Wing Attack': 'Flying',
-    
-    // Snorlax moves
-    'Body Slam': 'Normal',
-    
-    // Dragonite moves
-    'Aerial Ace': 'Flying',
-    'Fire Punch': 'Fire'
+    'Mega X-Scissor': 'Bug'
   };
 
   const getMoveType = (moveName: string): string => {
@@ -250,7 +262,7 @@ export default function Battle() {
       Fire: 0.5, Water: 0.5, Grass: 2.0, Ice: 0.5, Ground: 2.0, Flying: 2.0, Dragon: 2.0, Steel: 0.5 
     },
     'Fighting': { 
-      Normal: 2.0, Ice: 2.0, Poison: 0.5, Flying: 0.5, Psychic: 0.5, Bug: 0.5, Rock: 2.0, Ghost: 0.0, Steel: 2.0, Fairy: 0.5 
+      Normal: 2.0, Ice: 2.0, Poison: 0.5, Flying: 0.5, Psychic: 0.5, Bug: 0.5, Rock: 2.0, Ghost: 0.0, Steel: 2.0, Dark: 2.0, Fairy: 0.5 
     },
     'Poison': { 
       Grass: 2.0, Poison: 0.5, Ground: 0.5, Rock: 0.5, Ghost: 0.5, Steel: 0.0, Fairy: 2.0 
