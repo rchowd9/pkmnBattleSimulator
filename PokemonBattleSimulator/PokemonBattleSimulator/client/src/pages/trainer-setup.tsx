@@ -28,9 +28,18 @@ export default function TrainerSetup() {
     teamSetter(newTeam);
   };
 
-  // If AI, generate random team on start
+  // If AI, generate random team on start that doesn't overlap with player's team
   const getRandomTeam = () => {
-    const pool = [...allowedPokemon];
+    const playerPokemon = new Set(trainer1Team);
+    const availablePokemon = allowedPokemon.filter(p => !playerPokemon.has(p));
+    
+    // If not enough unique Pokémon, allow some overlap but prefer unique ones
+    const pool = [...availablePokemon];
+    if (pool.length < 6) {
+      const remaining = allowedPokemon.filter(p => !pool.includes(p));
+      pool.push(...remaining);
+    }
+    
     const team = [];
     for (let i = 0; i < 6; i++) {
       const idx = Math.floor(Math.random() * pool.length);
@@ -41,8 +50,12 @@ export default function TrainerSetup() {
   };
 
   useEffect(() => {
-    if (trainer2IsAI) setTrainer2Team(getRandomTeam());
-  }, [trainer2IsAI]);
+    if (trainer2IsAI) {
+      const aiTeam = getRandomTeam();
+      setTrainer2Team(aiTeam);
+      console.log('AI team generated:', aiTeam); // Debug log
+    }
+  }, [trainer2IsAI, trainer1Team]); // Add trainer1Team as dependency
 
   const handleStartBattle = useCallback(() => {
     localStorage.setItem("trainer1Team", JSON.stringify(trainer1Team));
@@ -50,6 +63,7 @@ export default function TrainerSetup() {
     localStorage.setItem("trainer1Pokemon", trainer1Team[0]);
     localStorage.setItem("trainer2Pokemon", trainer2Team[0]);
     localStorage.setItem("trainer2IsAI", trainer2IsAI ? "true" : "false");
+    console.log('Starting battle with AI:', trainer2IsAI); // Debug log
     setLocation("/battle/1");
   }, [trainer1Team, trainer2Team, trainer2IsAI, setLocation]);
 
