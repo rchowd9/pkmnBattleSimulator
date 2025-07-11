@@ -58,14 +58,32 @@ export default function TrainerSetup() {
   }, [trainer2IsAI, trainer1Team]);
 
   const handleStartBattle = useCallback(() => {
+    let finalTrainer2Team = trainer2Team;
+    if (trainer2IsAI) {
+      // Always generate a fresh, unique AI team right before starting the battle
+      const playerSet = new Set(trainer1Team);
+      let available = allowedPokemon.filter(p => !playerSet.has(p));
+      const aiTeam: string[] = [];
+      let pool = [...available];
+      while (aiTeam.length < 6) {
+        if (pool.length === 0) {
+          pool = allowedPokemon.filter(p => !aiTeam.includes(p) && !playerSet.has(p));
+          if (pool.length === 0) break;
+        }
+        const idx = Math.floor(Math.random() * pool.length);
+        aiTeam.push(pool[idx]);
+        pool.splice(idx, 1);
+      }
+      finalTrainer2Team = aiTeam;
+      setTrainer2Team(aiTeam); // update state for UI consistency
+    }
     localStorage.setItem("trainer1Team", JSON.stringify(trainer1Team));
-    localStorage.setItem("trainer2Team", JSON.stringify(trainer2Team));
+    localStorage.setItem("trainer2Team", JSON.stringify(finalTrainer2Team));
     localStorage.setItem("trainer1Pokemon", trainer1Team[0]);
-    localStorage.setItem("trainer2Pokemon", trainer2Team[0]);
+    localStorage.setItem("trainer2Pokemon", finalTrainer2Team[0]);
     localStorage.setItem("trainer2IsAI", trainer2IsAI ? "true" : "false");
-    console.log('Starting battle with AI:', trainer2IsAI); // Debug log
     setLocation("/battle/1");
-  }, [trainer1Team, trainer2Team, trainer2IsAI, setLocation]);
+  }, [trainer1Team, trainer2Team, trainer2IsAI, setLocation, allowedPokemon]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
