@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 
 export default function TrainerSetup() {
   const [trainer1Name, setTrainer1Name] = useState("Ash");
@@ -8,13 +8,50 @@ export default function TrainerSetup() {
   const [trainer2Pokemon, setTrainer2Pokemon] = useState("Charizard");
   const [showTrainer1Config, setShowTrainer1Config] = useState(false);
   const [showTrainer2Config, setShowTrainer2Config] = useState(false);
+  const [trainer2IsAI, setTrainer2IsAI] = useState(false);
   const [, setLocation] = useLocation();
 
+  const allowedPokemon = ["Pikachu", "Charizard", "Blastoise", "Venusaur", "Gengar", "Alakazam"];
+  const [trainer1Team, setTrainer1Team] = useState(Array(6).fill("Pikachu"));
+  const [trainer2Team, setTrainer2Team] = useState(Array(6).fill("Charizard"));
+
+  // Prevent duplicate picks in a team
+  const handleTeamChange = (
+    teamSetter: React.Dispatch<React.SetStateAction<string[]>>,
+    team: string[],
+    idx: number,
+    value: string
+  ) => {
+    if (team.includes(value)) return;
+    const newTeam = [...team];
+    newTeam[idx] = value;
+    teamSetter(newTeam);
+  };
+
+  // If AI, generate random team on start
+  const getRandomTeam = () => {
+    const pool = [...allowedPokemon];
+    const team = [];
+    for (let i = 0; i < 6; i++) {
+      const idx = Math.floor(Math.random() * pool.length);
+      team.push(pool[idx]);
+      pool.splice(idx, 1);
+    }
+    return team;
+  };
+
+  useEffect(() => {
+    if (trainer2IsAI) setTrainer2Team(getRandomTeam());
+  }, [trainer2IsAI]);
+
   const handleStartBattle = useCallback(() => {
-    localStorage.setItem("trainer1Pokemon", trainer1Pokemon);
-    localStorage.setItem("trainer2Pokemon", trainer2Pokemon);
+    localStorage.setItem("trainer1Team", JSON.stringify(trainer1Team));
+    localStorage.setItem("trainer2Team", JSON.stringify(trainer2Team));
+    localStorage.setItem("trainer1Pokemon", trainer1Team[0]);
+    localStorage.setItem("trainer2Pokemon", trainer2Team[0]);
+    localStorage.setItem("trainer2IsAI", trainer2IsAI ? "true" : "false");
     setLocation("/battle/1");
-  }, [trainer1Pokemon, trainer2Pokemon, setLocation]);
+  }, [trainer1Team, trainer2Team, trainer2IsAI, setLocation]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
@@ -46,18 +83,20 @@ export default function TrainerSetup() {
                 placeholder="Trainer 1 Name"
                 className="w-full p-2 border rounded"
               />
-              <select
-                value={trainer1Pokemon}
-                onChange={(e) => setTrainer1Pokemon(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="Pikachu">Pikachu</option>
-                <option value="Charizard">Charizard</option>
-                <option value="Blastoise">Blastoise</option>
-                <option value="Venusaur">Venusaur</option>
-                <option value="Gengar">Gengar</option>
-                <option value="Alakazam">Alakazam</option>
-              </select>
+              <div className="grid grid-cols-2 gap-2">
+                {trainer1Team.map((poke, idx) => (
+                  <select
+                    key={idx}
+                    value={poke}
+                    onChange={e => handleTeamChange(setTrainer1Team, trainer1Team, idx, e.target.value)}
+                    className="w-full p-2 border rounded"
+                  >
+                    {allowedPokemon.map(p => (
+                      <option key={p} value={p} disabled={trainer1Team.includes(p) && poke !== p}>{p}</option>
+                    ))}
+                  </select>
+                ))}
+              </div>
             </div>
           )}
           <button 
@@ -68,25 +107,41 @@ export default function TrainerSetup() {
           </button>
           {showTrainer2Config && (
             <div className="bg-red-50 rounded-lg p-4 space-y-3">
+              <label className="flex items-center space-x-2 mb-2">
+                <input
+                  type="checkbox"
+                  checked={trainer2IsAI}
+                  onChange={e => {
+                    setTrainer2IsAI(e.target.checked);
+                    if (e.target.checked) setTrainer2Name('AI');
+                  }}
+                />
+                <span>AI Opponent</span>
+              </label>
               <input
                 type="text"
                 value={trainer2Name}
                 onChange={(e) => setTrainer2Name(e.target.value)}
                 placeholder="Trainer 2 Name"
                 className="w-full p-2 border rounded"
+                disabled={trainer2IsAI}
               />
-              <select
-                value={trainer2Pokemon}
-                onChange={(e) => setTrainer2Pokemon(e.target.value)}
-                className="w-full p-2 border rounded"
-              >
-                <option value="Pikachu">Pikachu</option>
-                <option value="Charizard">Charizard</option>
-                <option value="Blastoise">Blastoise</option>
-                <option value="Venusaur">Venusaur</option>
-                <option value="Gengar">Gengar</option>
-                <option value="Alakazam">Alakazam</option>
-              </select>
+              {!trainer2IsAI && (
+                <div className="grid grid-cols-2 gap-2">
+                  {trainer2Team.map((poke, idx) => (
+                    <select
+                      key={idx}
+                      value={poke}
+                      onChange={e => handleTeamChange(setTrainer2Team, trainer2Team, idx, e.target.value)}
+                      className="w-full p-2 border rounded"
+                    >
+                      {allowedPokemon.map(p => (
+                        <option key={p} value={p} disabled={trainer2Team.includes(p) && poke !== p}>{p}</option>
+                      ))}
+                    </select>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           <button
