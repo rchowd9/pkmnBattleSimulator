@@ -480,11 +480,21 @@ export default function Battle() {
 
   // Detect if Trainer 2 is AI
   const trainer2IsAI = localStorage.getItem("trainer2IsAI") === "true";
+  
+  // Debug log to check AI detection
+  console.log('Battle: trainer2IsAI =', trainer2IsAI, 'currentTurn =', currentTurn);
 
   // AI logic: decide and perform action for Trainer 2
   // --- SMART AI SWITCHING LOGIC (Step 3 Final, Integrated) ---
   useEffect(() => {
-    if (!trainer2IsAI || currentTurn !== 'charizard') return;
+    console.log('AI useEffect triggered:', { trainer2IsAI, currentTurn, isGameOver });
+    
+    if (!trainer2IsAI || currentTurn !== 'charizard' || isGameOver) {
+      console.log('AI useEffect early return:', { trainer2IsAI, currentTurn, isGameOver });
+      return;
+    }
+
+    console.log('AI is making a move...');
 
     // Helper: Find best AI switch candidate (least expected damage from player's best move)
     function findBestAISwitch(): number | null {
@@ -511,6 +521,7 @@ export default function Battle() {
 
     // Forced switch if fainted
     if (getActiveHP(trainer2HP, trainer2Active) <= 0) {
+      console.log('AI Pokémon fainted, switching...');
       const bestIdx = findBestAISwitch();
       if (bestIdx !== null) {
         setTrainer2Active(bestIdx);
@@ -532,6 +543,7 @@ export default function Battle() {
       if (eff > maxEffectiveness) maxEffectiveness = eff;
     }
     if (maxEffectiveness > 1.5) { // threshold for 'severe disadvantage'
+      console.log('AI at severe disadvantage, switching...');
       const bestIdx = findBestAISwitch();
       if (bestIdx !== null) {
         setTrainer2Active(bestIdx);
@@ -544,11 +556,13 @@ export default function Battle() {
     // Otherwise, fallback to potion, mega, or best move (existing logic)
     // 1. Use potion if HP is low and potions left
     if (getActiveHP(trainer2HP, trainer2Active) <= 35 && getActivePotions(trainer2Potions, trainer2Active) > 0) {
+      console.log('AI using potion...');
       setTimeout(() => handleUsePotion(), 800);
       return;
     }
     // 2. Mega Evolve if not already and can mega evolve
     if (!getActiveMega(trainer2Mega, trainer2Active) && megaEvolvablePokemon.includes(getActivePokemon(trainer2TeamState, trainer2Active))) {
+      console.log('AI mega evolving...');
       setTimeout(() => handleMegaEvolve(), 800);
       return;
     }
@@ -570,10 +584,12 @@ export default function Battle() {
         bestMove = move;
       }
     }
+    console.log('AI attacking with:', bestMove);
     setTimeout(() => handleAttack(bestMove), 1200);
   }, [
     currentTurn, trainer2IsAI, trainer2Active, trainer2HP, trainer2TeamState, trainer2Mega,
-    trainer1Active, trainer1TeamState, trainer1Mega, trainer1HP, setTrainer2Active, setBattleLog, setCurrentTurn,
+    trainer1Active, trainer1TeamState, trainer1Mega, trainer1HP, trainer2Potions, isGameOver,
+    setTrainer2Active, setBattleLog, setCurrentTurn,
     getActiveHP, getActivePotions, getActiveMega, getActivePokemon, getPokemonTypesWithMega, getMoveType, getTypeEffectiveness,
     megaEvolvablePokemon, handleUsePotion, handleMegaEvolve, handleAttack
   ]);
@@ -833,4 +849,4 @@ export default function Battle() {
       </div>
     </div>
   );
-} 
+}  
