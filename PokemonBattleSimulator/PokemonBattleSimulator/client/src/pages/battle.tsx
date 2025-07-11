@@ -146,6 +146,16 @@ export default function Battle() {
       types: ['Bug', 'Steel'], 
       moves: ['X-Scissor', 'Bullet Punch', 'Iron Head', 'Wing Attack'],
       megaMoves: ['Mega X-Scissor', 'Bullet Punch', 'Iron Head', 'Wing Attack']
+    },
+    'Snorlax': { 
+      types: ['Normal'], 
+      moves: ['Body Slam', 'Hyper Beam', 'Earthquake', 'Rock Slide'],
+      megaMoves: ['Body Slam', 'Hyper Beam', 'Earthquake', 'Rock Slide']
+    },
+    'Dragonite': { 
+      types: ['Dragon', 'Flying'], 
+      moves: ['Dragon Claw', 'Aerial Ace', 'Thunder Wave', 'Fire Punch'],
+      megaMoves: ['Dragon Claw', 'Aerial Ace', 'Thunder Wave', 'Fire Punch']
     }
   };
 
@@ -205,7 +215,14 @@ export default function Battle() {
     'Mega X-Scissor': 'Bug',
     'Bullet Punch': 'Steel',
     'Iron Head': 'Steel',
-    'Wing Attack': 'Flying'
+    'Wing Attack': 'Flying',
+    
+    // Snorlax moves
+    'Body Slam': 'Normal',
+    
+    // Dragonite moves
+    'Aerial Ace': 'Flying',
+    'Fire Punch': 'Fire'
   };
 
   const getMoveType = (moveName: string): string => {
@@ -328,7 +345,9 @@ export default function Battle() {
     'Alakazam': '🧠',
     'Machamp': '💪',
     'Steelix': '🔗',
-    'Scizor': '✂️'
+    'Scizor': '✂️',
+    'Snorlax': '😴',
+    'Dragonite': '🐉'
   };
 
   const getPokemonImage = (pokemonName: string) => {
