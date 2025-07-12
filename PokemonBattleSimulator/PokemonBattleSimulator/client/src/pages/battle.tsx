@@ -1,6 +1,6 @@
 import { useRoute } from "wouter";
 import { Link } from "wouter";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useLocation } from "wouter";
 import { useIsMobile } from "../hooks/use-mobile";
 
@@ -1704,6 +1704,86 @@ export default function Battle() {
     trainer1HasMegaEvolved, trainer2HasMegaEvolved
   ]);
 
+  // Add state for ambient sound
+  const [ambientEnabled, setAmbientEnabled] = useState(true);
+  const ambientAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Function to play/stop ambient sound
+  const playAmbientSound = useCallback(() => {
+    if (!ambientEnabled) return;
+    if (!ambientAudioRef.current) {
+      const audio = new Audio("/ambient-battle.mp3"); // You can use a local or public domain sound
+      audio.loop = true;
+      audio.volume = volume * 0.2;
+      ambientAudioRef.current = audio;
+    }
+    ambientAudioRef.current.play();
+  }, [ambientEnabled, volume]);
+
+  const stopAmbientSound = useCallback(() => {
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.pause();
+      ambientAudioRef.current.currentTime = 0;
+    }
+  }, []);
+
+  // Play/stop ambient sound on toggle or volume change
+  useEffect(() => {
+    if (ambientEnabled) {
+      playAmbientSound();
+    } else {
+      stopAmbientSound();
+    }
+    return stopAmbientSound;
+  }, [ambientEnabled, playAmbientSound, stopAmbientSound]);
+
+  useEffect(() => {
+    if (ambientAudioRef.current) {
+      ambientAudioRef.current.volume = volume * 0.2;
+    }
+  }, [volume]);
+
+  // Add a low HP warning sound effect
+  const lowHPWarned = useRef<{[key: string]: boolean}>({});
+  const playLowHPWarning = () => {
+    const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    oscillator.type = 'sine';
+    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(volume * 0.5, audioContext.currentTime);
+    oscillator.frequency.exponentialRampToValueAtTime(220, audioContext.currentTime + 0.5);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.5);
+  };
+
+  // Watch for low HP on both teams
+  useEffect(() => {
+    trainer1TeamState.forEach((pokemon, idx) => {
+      const hp = trainer1HP[idx];
+      if (hp > 0 && hp <= 20 && !lowHPWarned.current[`t1-${idx}`]) {
+        playLowHPWarning();
+        lowHPWarned.current[`t1-${idx}`] = true;
+      }
+      if (hp > 20) {
+        lowHPWarned.current[`t1-${idx}`] = false;
+      }
+    });
+    trainer2TeamState.forEach((pokemon, idx) => {
+      const hp = trainer2HP[idx];
+      if (hp > 0 && hp <= 20 && !lowHPWarned.current[`t2-${idx}`]) {
+        playLowHPWarning();
+        lowHPWarned.current[`t2-${idx}`] = true;
+      }
+      if (hp > 20) {
+        lowHPWarned.current[`t2-${idx}`] = false;
+      }
+    });
+  }, [trainer1HP, trainer2HP, trainer1TeamState, trainer2TeamState]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-400 to-orange-500 flex items-center justify-center p-2">
       <div className={`bg-white rounded-lg shadow-xl ${isMobile ? 'p-4' : 'p-8'} max-w-4xl w-full mx-2`}>
@@ -1778,6 +1858,19 @@ export default function Battle() {
             >
               Test Defeat
             </button>
+            
+            <div className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                id="ambientEnabled"
+                checked={ambientEnabled}
+                onChange={(e) => setAmbientEnabled(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="ambientEnabled" className="text-sm font-medium text-gray-700">
+                Ambient Sound
+              </label>
+            </div>
           </div>
         </div>
         <div className={`grid grid-cols-1 ${isMobile ? 'gap-4 mb-6' : 'md:grid-cols-2 gap-8 mb-8'}`}>
@@ -1896,7 +1989,11 @@ export default function Battle() {
                   
                   <button 
                     onClick={() => setShowSwapMenu(!showSwapMenu)}
-                    className={`bg-blue-500 hover:bg-blue-600 text-white font-semibold ${isMobile ? 'py-3 px-4 text-base' : 'py-2 px-4'} rounded-lg transition-colors w-full`}
+                    disabled={
+                      trainer1TeamState.filter((_, i) => i !== trainer1Active && trainer1HP[i] > 0).length === 0
+                    }
+                    className={`bg-blue-500 hover:bg-blue-600 text-white font-semibold ${isMobile ? 'py-3 px-4 text-base' : 'py-2 px-4'} rounded-lg transition-colors w-full
+                      ${trainer1TeamState.filter((_, i) => i !== trainer1Active && trainer1HP[i] > 0).length === 0 ? 'disabled:bg-gray-400 cursor-not-allowed opacity-60' : ''}`}
                   >
                     Swap Pokémon
                   </button>
@@ -1979,15 +2076,21 @@ export default function Battle() {
           {showSwapMenu && !isGameOver && (
             <div className={`bg-blue-50 rounded-lg ${isMobile ? 'p-3' : 'p-4'} ${isMobile ? 'space-y-3' : 'space-y-2'}`}>
               <h3 className={`font-semibold text-blue-800 ${isMobile ? 'text-base' : ''}`}>Choose Pokémon:</h3>
-              {['Pikachu', 'Charizard', 'Blastoise', 'Venusaur', 'Gengar', 'Alakazam'].map(pokemon => (
-                <button
-                  key={pokemon}
-                  onClick={() => handleSwapPokemon(pokemon)}
-                  className={`w-full bg-white hover:bg-blue-100 text-gray-800 font-medium ${isMobile ? 'py-3 px-4 text-base' : 'py-2 px-4'} rounded border transition-colors`}
-                >
-                  {pokemon}
-                </button>
-              ))}
+              {trainer1TeamState.map((pokemon, idx) => {
+                if (idx === trainer1Active) return null; // Don't show the active Pokémon
+                const isFainted = trainer1HP[idx] <= 0;
+                return (
+                  <button
+                    key={pokemon + idx}
+                    onClick={() => !isFainted && handleSwapPokemon(pokemon)}
+                    disabled={isFainted}
+                    className={`w-full bg-white hover:bg-blue-100 text-gray-800 font-medium ${isMobile ? 'py-3 px-4 text-base' : 'py-2 px-4'} rounded border transition-colors mb-1
+                      ${isFainted ? 'opacity-50 cursor-not-allowed line-through' : ''}`}
+                  >
+                    {pokemon} {isFainted ? '(Fainted)' : ''}
+                  </button>
+                );
+              })}
             </div>
           )}
           
@@ -2072,4 +2175,4 @@ export default function Battle() {
       </div>
     </div>
   );
-} 
+}  
