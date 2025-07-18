@@ -171,16 +171,19 @@ export default function TrainerSetup() {
                 onChange={(e) => setTrainer2Name(e.target.value)}
                 placeholder="Trainer 2 Name"
                 className={`w-full ${isMobile ? 'p-3 text-base' : 'p-2'} border rounded`}
-                disabled={trainer2IsAI}
+                readOnly={trainer2IsAI}
               />
               {trainer2IsAI && (
                 <>
                   <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-2'}`}>
                     <label className={`${isMobile ? 'text-base' : 'text-sm'} font-medium text-gray-700`}>AI Difficulty</label>
                     <select
-                      className={`w-full ${isMobile ? 'p-3 text-base' : 'p-2'} border rounded`}
-                      value={localStorage.getItem('aiDifficulty') || 'Normal'}
-                      onChange={e => localStorage.setItem('aiDifficulty', e.target.value)}
+                      className={`w-full ${isMobile ? 'p-3 text-base' : 'p-2'} border rounded z-10`}
+                      value={aiDifficulty}
+                      onChange={e => {
+                        setAiDifficulty(e.target.value);
+                        localStorage.setItem('aiDifficulty', e.target.value);
+                      }}
                     >
                       <option value="Easy">Easy</option>
                       <option value="Normal">Normal</option>
@@ -190,9 +193,12 @@ export default function TrainerSetup() {
                   <div className={`flex flex-col ${isMobile ? 'gap-3' : 'gap-2'}`}>
                     <label className={`${isMobile ? 'text-base' : 'text-sm'} font-medium text-gray-700`}>AI Personality</label>
                     <select
-                      className={`w-full ${isMobile ? 'p-3 text-base' : 'p-2'} border rounded`}
-                      value={localStorage.getItem('aiPersonality') || 'Balanced'}
-                      onChange={e => localStorage.setItem('aiPersonality', e.target.value)}
+                      className={`w-full ${isMobile ? 'p-3 text-base' : 'p-2'} border rounded z-10`}
+                      value={aiPersonality}
+                      onChange={e => {
+                        setAiPersonality(e.target.value);
+                        localStorage.setItem('aiPersonality', e.target.value);
+                      }}
                     >
                       <option value="Aggressive">Aggressive</option>
                       <option value="Defensive">Defensive</option>
