@@ -20,6 +20,8 @@ export default function TrainerSetup() {
   ];
   const [trainer1Team, setTrainer1Team] = useState(Array(6).fill("Pikachu"));
   const [trainer2Team, setTrainer2Team] = useState(Array(6).fill("Charizard"));
+  const [aiDifficulty, setAiDifficulty] = useState(localStorage.getItem('aiDifficulty') || 'Normal');
+  const [aiPersonality, setAiPersonality] = useState(localStorage.getItem('aiPersonality') || 'Balanced');
 
   // Prevent duplicate picks in a team
   const handleTeamChange = (
